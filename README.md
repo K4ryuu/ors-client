@@ -8,7 +8,7 @@
 ![GitHub License](https://img.shields.io/github/license/K4ryuu/ors-client?style=for-the-badge)
 ![GitHub Repo stars](https://img.shields.io/github/stars/K4ryuu/ors-client?style=for-the-badge)
 ![GitHub Issues](https://img.shields.io/github/issues/K4ryuu/ors-client?style=for-the-badge)
-![NPM Type Definitions](https://img.shields.io/npm/types/ors-client?style=for-the-badge&label=TypeScript)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![Bundle Size](https://img.shields.io/bundlephobia/minzip/ors-client?style=for-the-badge&label=Bundle%20Size)
 
 </div>
