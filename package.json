@@ -1,0 +1,68 @@
+{
+   "name": "ors-client",
+   "version": "1.0.0",
+   "type": "module",
+   "description": "Modern JavaScript/TypeScript client for OpenRouteService API with full type safety and zero runtime dependencies",
+   "main": "dist/index.js",
+   "module": "dist/index.mjs",
+   "types": "dist/index.d.ts",
+   "files": [
+      "dist"
+   ],
+   "exports": {
+      ".": {
+         "types": "./dist/index.d.ts",
+         "import": "./dist/index.mjs",
+         "require": "./dist/index.js"
+      }
+   },
+   "scripts": {
+      "build": "tsup",
+      "lint": "eslint src --ext .ts",
+      "lint:fix": "eslint src --ext .ts --fix",
+      "type-check": "tsc --noEmit",
+      "test": "node --import tsx --test test/*.test.ts",
+      "dev": "tsup --watch",
+      "clean": "rm -rf dist",
+      "prepublishOnly": "npm run clean && npm run lint && npm run type-check && npm run build"
+   },
+   "keywords": [
+      "openrouteservice",
+      "routing",
+      "directions",
+      "geocoding",
+      "typescript",
+      "api-client",
+      "maps",
+      "navigation",
+      "heigit",
+      "osrm",
+      "route",
+      "elevation",
+      "isochrones",
+      "matrix",
+      "poi",
+      "optimization"
+   ],
+   "author": "Kőrösfalvi \"K4ryuu\" Martin",
+   "license": "MIT",
+   "repository": {
+      "type": "git",
+      "url": "https://github.com/K4ryuu/ors-client.git"
+   },
+   "devDependencies": {
+      "@types/node": "^24.5.1",
+      "@typescript-eslint/eslint-plugin": "^8.44.0",
+      "@typescript-eslint/parser": "^8.44.0",
+      "dotenv": "^17.2.2",
+      "eslint": "^9.35.0",
+      "eslint-plugin-unused-imports": "^4.2.0",
+      "tsup": "^8.5.0",
+      "tsx": "^4.20.5",
+      "typescript": "^5.9.2"
+   },
+   "engines": {
+      "node": ">=18.0.0"
+   },
+   "sideEffects": false
+}
