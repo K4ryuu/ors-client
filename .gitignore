@@ -7,5 +7,4 @@ docs/
 *.log
 .DS_Store
 coverage/
-
 .claude/
