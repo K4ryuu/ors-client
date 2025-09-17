@@ -125,8 +125,8 @@ If you want to contribute or just poke around:
 
 ```bash
 # Clone the repo
-git clone https://github.com/K4ryuu/OpenRouteService-Wrapper.git
-cd OpenRouteService-Wrapper
+git clone https://github.com/K4ryuu/ors-client.git
+cd ors-client
 
 # Install deps
 pnpm install
