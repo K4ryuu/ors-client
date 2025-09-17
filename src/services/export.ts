@@ -10,11 +10,11 @@ import { OpenRouteServiceClient } from "../client.js";
 import type { ClientConfig, Profile } from "../types/common.js";
 import type { ExportRequest, ExportResponse, ExportTopoJSONResponse } from "../types/export.js";
 
-const EXPORT_API_VERSION = 2;
+const API_VERSION = 2;
 
 export class ExportService extends OpenRouteServiceClient {
    constructor(config: ClientConfig) {
-      super(config, EXPORT_API_VERSION);
+      super(config, API_VERSION);
    }
 
    /**
