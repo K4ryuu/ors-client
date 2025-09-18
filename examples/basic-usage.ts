@@ -1,4 +1,4 @@
-import { OpenRouteService, OpenRouteServiceError } from "../src/index.js";
+import { OpenRouteService, OpenRouteServiceError } from "../src/index.js"; // or "ors-client" if using npm package
 import "dotenv/config";
 
 /**

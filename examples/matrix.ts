@@ -1,4 +1,4 @@
-import { Coordinate, OpenRouteService } from "../src/index.js";
+import { Coordinate, OpenRouteService } from "../src/index.js"; // or "ors-client" if using npm package
 import "dotenv/config";
 
 const client = new OpenRouteService({
