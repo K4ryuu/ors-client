@@ -31,6 +31,7 @@ export type {
 	RoutingOptions,
 	DirectionsGetRequest,
 	DirectionsPostRequest,
+	RouteGeometry,
 	RouteSegment,
 	RouteStep,
 	RouteSummary,
