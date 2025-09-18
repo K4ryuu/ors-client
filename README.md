@@ -80,7 +80,7 @@ pnpm add ors-client
 ## Quick example
 
 ```typescript
-import { OpenRouteService } from "openrouteservice-ts";
+import { OpenRouteService } from "ors-client";
 
 const ors = new OpenRouteService({
    apiKey: "your-api-key", // get one free at openrouteservice.org
