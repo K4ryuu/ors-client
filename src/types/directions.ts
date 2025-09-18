@@ -2,6 +2,12 @@
 
 import type { Coordinate, BaseRequest, DistanceUnit, LanguageCode, GeoJSONFeatureCollection } from "./common.js";
 
+// GeoJSON LineString geometry for decoded routes
+export interface RouteGeometry {
+   type: "LineString";
+   coordinates: Coordinate[]; // Array of [longitude, latitude] coordinates
+}
+
 // How you want your route calculated - choose your adventure
 export type RoutingPreference = "recommended" | "fastest" | "shortest";
 
@@ -115,7 +121,7 @@ export interface RouteSummary {
 export interface Route {
    summary: RouteSummary; // Quick overview of the route
    segments: RouteSegment[]; // Detailed segments with turn-by-turn instructions
-   geometry: string; // Encoded route geometry (polyline format) - decode this to draw on map
+   geometry: string | RouteGeometry; // Encoded route geometry (polyline format) or decoded GeoJSON LineString
    way_points: number[]; // Important points along the route (start, waypoints, end)
    bbox: [number, number, number, number]; // Bounding box of the route [west, south, east, north]
 
