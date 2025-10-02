@@ -48,8 +48,9 @@ export class OpenRouteServiceClient {
    protected readonly baseUrl: string;
    private lastRateLimitInfo?: { limit: number; remaining: number; reset: Date; requestTimestamp: Date };
 
-   // Throttling for individual geocoding endpoints (each endpoint gets its own throttle)
-   private static lastGeocodingRequests: Map<string, number> = new Map();
+   // Throttling for individual geocoding endpoints (each endpoint gets its own throttle per API key)
+   // Structure: Map<apiKey, Map<endpoint, timestamp>>
+   private static lastGeocodingRequests: Map<string, Map<string, number>> = new Map();
    private static readonly GEOCODING_THROTTLE_MS = 300; // ~3.33 requests/second per endpoint
 
    constructor(config: ClientConfig, apiVersion: number = 2) {
@@ -200,10 +201,19 @@ export class OpenRouteServiceClient {
    /**
     * Throttles geocoding requests to comply with API requirements.
     * Each geocoding endpoint (autocomplete, search, reverse) should be limited to ~3.33 requests/second independently.
+    * Throttling is isolated per API key, so different API keys don't interfere with each other.
     */
    private async throttleGeocodingRequest(endpoint: string): Promise<void> {
+      const apiKey = this.config.apiKey;
+
+      // Initialize the endpoint map for this API key if it doesn't exist
+      if (!OpenRouteServiceClient.lastGeocodingRequests.has(apiKey)) {
+         OpenRouteServiceClient.lastGeocodingRequests.set(apiKey, new Map());
+      }
+
+      const endpointMap = OpenRouteServiceClient.lastGeocodingRequests.get(apiKey)!;
       const now = Date.now();
-      const lastRequestTime = OpenRouteServiceClient.lastGeocodingRequests.get(endpoint) || 0;
+      const lastRequestTime = endpointMap.get(endpoint) || 0;
       const timeSinceLastRequest = now - lastRequestTime;
 
       if (timeSinceLastRequest < OpenRouteServiceClient.GEOCODING_THROTTLE_MS) {
@@ -211,7 +221,7 @@ export class OpenRouteServiceClient {
          await new Promise(resolve => setTimeout(resolve, delayNeeded));
       }
 
-      OpenRouteServiceClient.lastGeocodingRequests.set(endpoint, Date.now());
+      endpointMap.set(endpoint, Date.now());
    }
 
    /**
