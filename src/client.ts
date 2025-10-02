@@ -159,9 +159,8 @@ export class OpenRouteServiceClient {
                      errorMessage = `${errorMessage} - ${responseData.error.message || responseData.error}`;
                   }
                }
-            } catch (jsonError) {
+            } catch {
                // Sometimes the API returns non-JSON error responses, handle gracefully
-               console.warn("Failed to parse error response as JSON:", jsonError);
                responseData = { rawResponse: responseText || "Empty response" };
             }
 
