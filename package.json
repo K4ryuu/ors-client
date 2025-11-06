@@ -1,6 +1,6 @@
 {
    "name": "ors-client",
-   "version": "1.0.4",
+   "version": "1.0.5",
    "type": "module",
    "description": "Modern JavaScript/TypeScript client for OpenRouteService API with full type safety and zero runtime dependencies",
    "main": "dist/index.cjs",
