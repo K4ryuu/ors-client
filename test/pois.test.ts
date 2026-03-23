@@ -137,7 +137,7 @@ describe("POI Service", () => {
          (error: Error) => {
             // Check if it's any kind of error (network, JSON parse, or API error)
             return error instanceof Error;
-         }
+         },
       );
    });
 });

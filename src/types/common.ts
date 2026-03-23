@@ -19,8 +19,9 @@ export interface AuthConfig {
 }
 
 // Configuration for the OpenRouteService client
-export interface ClientConfig extends AuthConfig {
-   baseUrl?: string; // API base URL (leave default unless you know what you're doing)
+export interface ClientConfig {
+   apiKey?: string; // Required for public API, optional for self-hosted instances
+   baseUrl?: string; // API base URL (leave default unless self-hosting)
    timeout?: number; // Request timeout in milliseconds (default: 30000)
    headers?: Record<string, string>; // Extra headers to send with requests
 }

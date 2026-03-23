@@ -43,7 +43,7 @@ export class OpenRouteServiceError extends Error {
 
 // Base client that handles all the HTTP stuff - you probably won't use this directly
 export class OpenRouteServiceClient {
-   private readonly config: Required<ClientConfig>;
+   private readonly config: Required<Pick<ClientConfig, "baseUrl" | "timeout" | "headers">> & Pick<ClientConfig, "apiKey">;
    private readonly baseHeaders: Record<string, string>;
    protected readonly baseUrl: string;
    private lastRateLimitInfo?: { limit: number; remaining: number; reset: Date; requestTimestamp: Date };
@@ -54,26 +54,36 @@ export class OpenRouteServiceClient {
    private static readonly GEOCODING_THROTTLE_MS = 300; // ~3.33 requests/second per endpoint
 
    constructor(config: ClientConfig, apiVersion: number = 2) {
-      // Make sure they actually gave us an API key
-      if (!config.apiKey || config.apiKey.trim() === "") {
-         throw new OpenRouteServiceError("API key is required. Get one for free at https://openrouteservice.org/sign-up/");
+      const DEFAULT_BASE_URL = "https://api.openrouteservice.org";
+      const isCustomBaseUrl = !!config.baseUrl;
+
+      // API key is required for the public API, but self-hosted instances may not need one
+      if (!isCustomBaseUrl) {
+         if (!config.apiKey || config.apiKey.trim() === "") {
+            throw new OpenRouteServiceError("API key is required. Get one for free at https://openrouteservice.org/sign-up/");
+         }
+
+         if (config.apiKey.toLocaleLowerCase() === "your-api-key-here") {
+            throw new OpenRouteServiceError("Please replace the placeholder API key with your actual OpenRouteService API key. Get one for free at https://openrouteservice.org/sign-up/");
+         }
       }
 
-      // Catch the common mistake of leaving the placeholder in there
-      if (config.apiKey.toLocaleLowerCase() === "your-api-key-here") {
-         throw new OpenRouteServiceError("Please replace the placeholder API key with your actual OpenRouteService API key. Get one for free at https://openrouteservice.org/sign-up/");
-      }
+      this.config = { baseUrl: DEFAULT_BASE_URL, timeout: 30000, headers: {}, ...config };
 
-      this.config = { baseUrl: "https://api.openrouteservice.org/v2", timeout: 30000, headers: {}, ...config };
+      const effectiveBase = (isCustomBaseUrl ? config.baseUrl! : DEFAULT_BASE_URL).replace(/\/+$/, "");
 
-      // Different API versions have different base URLs - v1 is special
       if (apiVersion === 1) {
-         this.baseUrl = "https://api.openrouteservice.org";
+         this.baseUrl = effectiveBase;
       } else {
-         this.baseUrl = `https://api.openrouteservice.org/v${apiVersion}`;
+         this.baseUrl = `${effectiveBase}/v${apiVersion}`;
       }
 
-      this.baseHeaders = { "Content-Type": "application/json", Accept: "application/json", Authorization: this.config.apiKey, ...this.config.headers };
+      this.baseHeaders = {
+         "Content-Type": "application/json",
+         Accept: "application/json",
+         ...(this.config.apiKey ? { Authorization: this.config.apiKey } : {}),
+         ...this.config.headers,
+      };
    }
 
    private getErrorMessage(statusCode: number): string {
@@ -204,7 +214,7 @@ export class OpenRouteServiceClient {
     * Throttling is isolated per API key, so different API keys don't interfere with each other.
     */
    private async throttleGeocodingRequest(endpoint: string): Promise<void> {
-      const apiKey = this.config.apiKey;
+      const apiKey = this.config.apiKey || "__no_key__";
 
       // Initialize the endpoint map for this API key if it doesn't exist
       if (!OpenRouteServiceClient.lastGeocodingRequests.has(apiKey)) {
