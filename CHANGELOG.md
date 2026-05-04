@@ -14,11 +14,17 @@ All notable changes to this project will be documented here.
 - `MemoryCache` class and `defaultBuildKey` helper exported from the package
 - `examples/caching.ts` with in-memory, Redis, custom key, and DB adapter patterns
 - Unit tests for cache logic (`test/cache.test.ts`, 17 tests)
+- Unit tests for client internals — HTTP error mapping, auth headers, throttle, rate limit parsing (`test/client.test.ts`, 39 tests)
+- JSDoc on all public classes, methods, and types across every service
+- Missing request fields to `DirectionsPostRequest`: `bearings`, `optimized`, `departure`, `arrival`
+- Missing request fields to `IsochroneRequest`: `options`, `time`
+- Missing type exports: `GeoJSONGeometry`, `GeoJSONFeature`, `BoundingBox`, `ApiError`, `ResponseFormat`
+- `CODEOWNERS`, `CHANGELOG`, `CONTRIBUTING` files
 
 ### Changed
 
 - Migrated dev tooling to Bun (test runner, package manager)
-- All devDependencies bumped to latest
+- devDependencies pinned to `^` ranges instead of `latest`
 - Added `bun` to `engines` in `package.json`
 
 ---
