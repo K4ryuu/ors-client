@@ -1,10 +1,8 @@
 import { describe, test, expect, mock, afterEach, beforeEach } from 'bun:test';
 import { OpenRouteServiceClient, OpenRouteServiceError } from '../src/client.js';
 
-// Minimal concrete subclass so we can call protected methods
 class TestClient extends OpenRouteServiceClient {
    constructor(config: Record<string, unknown> = {}, apiVersion = 2) {
-      // only inject default apiKey when there's no custom baseUrl (self-hosted doesn't need one)
       const defaults = config.baseUrl && !config.apiKey ? {} : { apiKey: 'test-key' };
       super({ ...defaults, ...config } as never, apiVersion);
    }
@@ -27,6 +25,11 @@ function makeFetch(data: unknown, ok = true, status = 200, headers: Record<strin
       json:    async () => data,
       text:    async () => JSON.stringify(data),
    }));
+}
+
+// catches a rejected promise and returns the error typed
+function catchErr(p: Promise<unknown>): Promise<OpenRouteServiceError> {
+   return p.catch((e: OpenRouteServiceError) => e) as Promise<OpenRouteServiceError>;
 }
 
 const originalFetch = globalThis.fetch;
@@ -76,7 +79,7 @@ describe('OpenRouteServiceClient - HTTP error mapping', () => {
    for (const [status, label] of cases) {
       test(`${status} throws with correct message`, async () => {
          globalThis.fetch = makeFetch({}, false, status) as unknown as typeof globalThis.fetch;
-         const err = await new TestClient().callGet('/test').catch(e => e);
+         const err = await catchErr(new TestClient().callGet('/test'));
          expect(err).toBeInstanceOf(OpenRouteServiceError);
          expect(err.statusCode).toBe(status);
          expect(err.message).toContain(label);
@@ -85,14 +88,14 @@ describe('OpenRouteServiceClient - HTTP error mapping', () => {
 });
 
 describe('OpenRouteServiceError - helpers', () => {
-   test('isBadRequest',        () => expect(new OpenRouteServiceError('', 400).isBadRequest()).toBe(true));
-   test('isNotFound',          () => expect(new OpenRouteServiceError('', 404).isNotFound()).toBe(true));
-   test('isMethodNotAllowed',  () => expect(new OpenRouteServiceError('', 405).isMethodNotAllowed()).toBe(true));
-   test('isPayloadTooLarge',   () => expect(new OpenRouteServiceError('', 413).isPayloadTooLarge()).toBe(true));
-   test('isRateLimited',       () => expect(new OpenRouteServiceError('', 429).isRateLimited()).toBe(true));
-   test('isServerError',       () => expect(new OpenRouteServiceError('', 500).isServerError()).toBe(true));
-   test('isNotImplemented',    () => expect(new OpenRouteServiceError('', 501).isNotImplemented()).toBe(true));
-   test('isServiceUnavailable',() => expect(new OpenRouteServiceError('', 503).isServiceUnavailable()).toBe(true));
+   test('isBadRequest',         () => expect(new OpenRouteServiceError('', 400).isBadRequest()).toBe(true));
+   test('isNotFound',           () => expect(new OpenRouteServiceError('', 404).isNotFound()).toBe(true));
+   test('isMethodNotAllowed',   () => expect(new OpenRouteServiceError('', 405).isMethodNotAllowed()).toBe(true));
+   test('isPayloadTooLarge',    () => expect(new OpenRouteServiceError('', 413).isPayloadTooLarge()).toBe(true));
+   test('isRateLimited',        () => expect(new OpenRouteServiceError('', 429).isRateLimited()).toBe(true));
+   test('isServerError',        () => expect(new OpenRouteServiceError('', 500).isServerError()).toBe(true));
+   test('isNotImplemented',     () => expect(new OpenRouteServiceError('', 501).isNotImplemented()).toBe(true));
+   test('isServiceUnavailable', () => expect(new OpenRouteServiceError('', 503).isServiceUnavailable()).toBe(true));
 
    test('getRemainingRequests returns 0 with no rate limit info', () => {
       expect(new OpenRouteServiceError('').getRemainingRequests()).toBe(0);
@@ -136,7 +139,7 @@ describe('OpenRouteServiceClient - rate limit headers', () => {
          'x-ratelimit-reset':     '1700000000',
       }) as unknown as typeof globalThis.fetch;
 
-      const err = await new TestClient().callGet('/test').catch(e => e);
+      const err = await catchErr(new TestClient().callGet('/test'));
       expect(err.isRateLimited()).toBe(true);
       expect(err.getRemainingRequests()).toBe(0);
       expect(err.getRateLimitInfo()?.limit).toBe(40);
@@ -146,7 +149,7 @@ describe('OpenRouteServiceClient - rate limit headers', () => {
 describe('OpenRouteServiceClient - network errors', () => {
    test('wraps network error in OpenRouteServiceError', async () => {
       globalThis.fetch = mock(async () => { throw new Error('ECONNREFUSED'); }) as unknown as typeof globalThis.fetch;
-      const err = await new TestClient().callGet('/test').catch(e => e);
+      const err = await catchErr(new TestClient().callGet('/test'));
       expect(err).toBeInstanceOf(OpenRouteServiceError);
       expect(err.message).toContain('Network error');
       expect(err.message).toContain('ECONNREFUSED');
@@ -159,7 +162,7 @@ describe('OpenRouteServiceClient - network errors', () => {
          throw e;
       }) as unknown as typeof globalThis.fetch;
 
-      const err = await new TestClient({ timeout: 100 }).callGet('/test').catch(e => e);
+      const err = await catchErr(new TestClient({ timeout: 100 }).callGet('/test'));
       expect(err).toBeInstanceOf(OpenRouteServiceError);
       expect(err.message).toContain('timeout');
    });
@@ -175,7 +178,7 @@ describe('OpenRouteServiceClient - error body parsing', () => {
          json:    async () => ({ error: { message: 'Invalid coordinates' } }),
       })) as unknown as typeof globalThis.fetch;
 
-      const err = await new TestClient().callGet('/test').catch(e => e);
+      const err = await catchErr(new TestClient().callGet('/test'));
       expect(err.message).toContain('Invalid coordinates');
    });
 
@@ -188,7 +191,7 @@ describe('OpenRouteServiceClient - error body parsing', () => {
          json:    async () => { throw new Error('not json'); },
       })) as unknown as typeof globalThis.fetch;
 
-      const err = await new TestClient().callGet('/test').catch(e => e);
+      const err = await catchErr(new TestClient().callGet('/test'));
       expect(err).toBeInstanceOf(OpenRouteServiceError);
       expect(err.statusCode).toBe(500);
    });
@@ -253,7 +256,6 @@ describe('OpenRouteServiceClient - auth headers', () => {
 
 describe('OpenRouteServiceClient - geocoding throttle', () => {
    beforeEach(() => {
-      // reset static throttle state
       (OpenRouteServiceClient as never as { lastGeocodingRequests: Map<unknown, unknown> })
          .lastGeocodingRequests = new Map();
    });
