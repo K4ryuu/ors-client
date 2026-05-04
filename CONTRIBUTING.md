@@ -10,7 +10,7 @@ cd ors-client
 bun install   # or pnpm/npm, whatever you prefer
 ```
 
-Copy `.env.example` to `.env` and add your ORS API key — you'll need it for the integration tests.
+Copy `.env.example` to `.env` and add your ORS API key - you'll need it for the integration tests.
 
 ## Running tests
 
@@ -23,15 +23,16 @@ Most tests hit the real ORS API so you need a valid key. If a test fails due to 
 
 ## Making changes
 
-- **Bugs** — open an issue first so we can confirm it's actually a bug
-- **Features** — open an issue to discuss before spending time on it
-- **Docs / examples** — just send the PR, no need to discuss
+- **Bugs** - open an issue first so we can confirm it's actually a bug
+- **Features** - open an issue to discuss before spending time on it
+- **Docs / examples** - just send the PR, no need to discuss
 
 ## Code style
 
 - TypeScript, strict mode, no `any`
-- No runtime dependencies — keep it that way
-- Short inline comments only, no docblocks
+- No runtime dependencies - keep it that way
+- JSDoc on all public methods, params, returns, throws - short and casual, no corporate fluff
+- Short inline comments for non-obvious logic
 - Follow the patterns already in the codebase
 
 ## Commits
@@ -49,6 +50,6 @@ Keep it lowercase, keep it short.
 - One thing per PR
 - If it's a new feature, add or update the relevant example in `examples/`
 - If it's a bug fix, add a test that catches it
-- Update `CHANGELOG.md` under `[Unreleased]`
+- Update `CHANGELOG.md` - add a new version section or note it under the latest version
 
 That's it. Don't overthink it.
