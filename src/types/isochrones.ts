@@ -2,24 +2,38 @@
 
 import type { Coordinate, BaseRequest, GeoJSONFeatureCollection } from "./common.js";
 
-// Range types for isochrone calculation - time or distance based
+/**
+ * How range values are interpreted.
+ * - `"time"` - range is in seconds (e.g. 600 = 10 minutes)
+ * - `"distance"` - range is in meters
+ */
 export type IsochroneRangeType = "time" | "distance";
 
-// Isochrone request - "show me everywhere I can get in 15 minutes"
+/** Request to compute reachable area polygons from one or more center points. */
 export interface IsochroneRequest extends BaseRequest {
-   locations: Coordinate[]; // Array of coordinates for isochrone centers
-   range: number[]; // Range values (in seconds for time, meters for distance)
-   range_type?: IsochroneRangeType; // Type of range calculation
-   interval?: number; // Interval for multiple ranges
-   location_type?: "start" | "destination"; // Location type for calculation
-   smoothing?: number; // Smoothing factor for isochrone shapes
-   attributes?: string[]; // Include attributes in response
-   intersections?: boolean; // Include intersections
-   units?: "m" | "km" | "mi"; // Units for distance measurements
-   area_units?: "m" | "km" | "ha" | "mi" | "ft"; // Units for area calculations
+   /** Center point(s) for the isochrones as `[longitude, latitude]`. */
+   locations: Coordinate[];
+   /** Range values - seconds for `time`, meters for `distance`. Multiple values produce multiple rings. */
+   range: number[];
+   /** Whether `range` values are in time (seconds) or distance (meters). Defaults to `"time"`. */
+   range_type?: IsochroneRangeType;
+   /** Step size for generating multiple evenly-spaced isochrones within the max range. */
+   interval?: number;
+   /** Whether to calculate from the location (`"start"`) or towards it (`"destination"`). */
+   location_type?: "start" | "destination";
+   /** Smoothing factor (0–100) for the polygon edges - higher = smoother shapes. */
+   smoothing?: number;
+   /** Extra attributes to include in each feature's properties. */
+   attributes?: string[];
+   /** Whether to compute and include intersections between isochrones. */
+   intersections?: boolean;
+   /** Unit for distance range values. */
+   units?: "m" | "km" | "mi";
+   /** Unit for area values in the response properties. */
+   area_units?: "m" | "km" | "ha" | "mi" | "ft";
 }
 
-// Isochrone response (GeoJSON format) - ready to display on a map
+/** Isochrone API response - a GeoJSON FeatureCollection of reachable area polygons. */
 export interface IsochroneResponse extends GeoJSONFeatureCollection {
    // Standard metadata
    metadata: {
@@ -29,5 +43,6 @@ export interface IsochroneResponse extends GeoJSONFeatureCollection {
       query: Record<string, unknown>;
       engine: { version: string; build_date: string; graph_date: string };
    };
-   bbox: [number, number, number, number]; // Bounding box
+   /** Bounding box enclosing all isochrone polygons as `[west, south, east, north]`. */
+   bbox: [number, number, number, number];
 }

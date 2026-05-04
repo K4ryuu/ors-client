@@ -2,43 +2,56 @@
 
 import type { Coordinate, BaseRequest } from "./common.js";
 
-// Export request parameters - get the routing graph for an area
+/** Request to export routing graph data within a bounding box. */
 export interface ExportRequest extends BaseRequest {
-   bbox: [Coordinate, Coordinate]; // Bounding box coordinates as array of coordinate pairs [longitude, latitude]
-   geometry?: boolean; // Include geometry information
+   /** Bounding box as `[[min_lon, min_lat], [max_lon, max_lat]]`. */
+   bbox: [Coordinate, Coordinate];
+   /** Whether to include geometry for each edge. */
+   geometry?: boolean;
 }
 
-// Graph node - a point in the routing network
+/** A node (intersection) in the routing graph. */
 export interface GraphNode {
-   nodeId: number; // Node ID
-   location: Coordinate; // Node location [longitude, latitude]
+   /** Internal ORS node ID. */
+   nodeId: number;
+   /** Geographic location of the node as `[longitude, latitude]`. */
+   location: Coordinate;
 }
 
-// Graph edge - a connection between two nodes
+/** An edge (road segment) connecting two nodes in the routing graph. */
 export interface GraphEdge {
-   fromId: number; // Source node ID
-   toId: number; // Target node ID
-   weight: string; // Edge weight (travel cost/time)
+   /** ID of the source node. */
+   fromId: number;
+   /** ID of the target node. */
+   toId: number;
+   /** Edge traversal cost/time as a string value. */
+   weight: string;
 }
 
-// Export response (JSON format) - the routing graph data
+/** Routing graph export response in JSON format. */
 export interface ExportResponse {
-   nodes: GraphNode[]; // Array of graph nodes
-   edges: GraphEdge[]; // Array of graph edges
-   nodes_count: number; // Number of nodes in the graph
-   edges_count: number; // Number of edges in the graph
+   /** All nodes within the requested area. */
+   nodes: GraphNode[];
+   /** All edges connecting the nodes. */
+   edges: GraphEdge[];
+   /** Total count of nodes in the response. */
+   nodes_count: number;
+   /** Total count of edges in the response. */
+   edges_count: number;
 }
 
-// TopoJSON object base interface
+/** Base TopoJSON topology object. */
 export interface TopoJSONObject {
    type: "Topology";
    objects: Record<string, unknown>;
    arcs: number[][][];
+   /** Bounding box of the topology as `[west, south, east, north]`. */
    bbox?: [number, number, number, number];
+   /** Scale and translation for quantized coordinates. */
    transform?: { scale: [number, number]; translate: [number, number] };
 }
 
-// Export response in TopoJSON format - compressed geographic data
+/** Routing graph export response in TopoJSON format. */
 export interface ExportTopoJSONResponse extends TopoJSONObject {
    // Graph topology data
    objects: {

@@ -1,93 +1,141 @@
-// [longitude, latitude] - yep, longitude comes first like everyone expects!
+/** A geographic coordinate as `[longitude, latitude]`. Note: longitude comes first! */
 export type Coordinate = [number, number];
 
-// How you're getting around - pick your poison
+/**
+ * Routing profile - defines the mode of transport and the road network to use.
+ *
+ * - `"driving-car"` - regular passenger car
+ * - `"driving-hgv"` - heavy goods vehicle (trucks), respects weight/height limits
+ * - `"cycling-regular"` - standard bike
+ * - `"cycling-road"` - road bike, prefers smooth surfaces and faster roads
+ * - `"cycling-mountain"` - mountain bike, handles rougher terrain
+ * - `"cycling-electric"` - e-bike, slightly faster than regular cycling
+ * - `"foot-walking"` - walking on footpaths and roads
+ * - `"foot-hiking"` - hiking, can use trails and paths not suitable for walking
+ * - `"wheelchair"` - wheelchair-accessible routes only
+ */
 export type Profile =
-   | "driving-car" // Regular car
-   | "driving-hgv" // Heavy goods vehicle (trucks)
-   | "cycling-regular" // Regular bike
-   | "cycling-road" // Road bike (faster, avoids rough surfaces)
-   | "cycling-mountain" // Mountain bike (can handle rougher terrain)
-   | "cycling-electric" // E-bike (bit faster than regular)
-   | "foot-walking" // Walking
-   | "foot-hiking" // Hiking (can use trails, paths)
-   | "wheelchair"; // Wheelchair accessible routes
+   | "driving-car"
+   | "driving-hgv"
+   | "cycling-regular"
+   | "cycling-road"
+   | "cycling-mountain"
+   | "cycling-electric"
+   | "foot-walking"
+   | "foot-hiking"
+   | "wheelchair";
 
-// Your API authentication config
+/** Auth-only config - just the API key. Prefer `ClientConfig` for full client setup. */
 export interface AuthConfig {
-   apiKey: string; // Your OpenRouteService API key
+   /** Your OpenRouteService API key. Get one free at https://openrouteservice.org/sign-up/ */
+   apiKey: string;
 }
 
-// Configuration for the OpenRouteService client
+/** Configuration for the OpenRouteService client. */
 export interface ClientConfig {
-   apiKey?: string; // Required for public API, optional for self-hosted instances
-   baseUrl?: string; // API base URL (leave default unless self-hosting)
-   timeout?: number; // Request timeout in milliseconds (default: 30000)
-   headers?: Record<string, string>; // Extra headers to send with requests
-   cache?: number | CacheConfig; // number = TTL ms for built-in in-memory cache; CacheConfig for custom adapter
+   /** Your ORS API key. Required for the public API; omit for self-hosted instances. */
+   apiKey?: string;
+   /** Custom API base URL. Only needed for self-hosted ORS instances. */
+   baseUrl?: string;
+   /** Request timeout in milliseconds. Defaults to 30000 (30s). */
+   timeout?: number;
+   /** Extra HTTP headers to include with every request. */
+   headers?: Record<string, string>;
+   /**
+    * Cache configuration. Pass a number to use the built-in in-memory cache with that TTL (in ms),
+    * or a `CacheConfig` object to use a custom adapter (e.g. Redis).
+    */
+   cache?: number | CacheConfig;
 }
 
-// Standard API error response from ORS
+/** Standard error response shape returned by the ORS API on failure. */
 export interface ApiError {
    error: {
-      code: number; // Error code number
-      message: string; // What went wrong
+      /** ORS-specific error code number. */
+      code: number;
+      /** Human-readable description of what went wrong. */
+      message: string;
    };
 }
 
-// Response format options - pick what works best for your use case
+/** Available response formats for some ORS endpoints. */
 export type ResponseFormat = "json" | "geojson" | "gpx" | "topojson";
 
-// Distance units - because not everyone uses meters
+/** Distance units supported across ORS services. */
 export type DistanceUnit = "m" | "km" | "mi";
 
-// Language codes for instructions - supports most major languages, use the 2-letter code
+/**
+ * ISO 639-1 language codes supported for turn-by-turn instruction text.
+ * Use the 2-letter code, e.g. `"en"` for English, `"de"` for German.
+ */
 export type LanguageCode = "en" | "de" | "fr" | "es" | "it" | "nl" | "pt" | "ru" | "zh" | "ja" | "ko" | "pl" | "cs" | "sk" | "hu" | "ro" | "bg" | "hr" | "sr" | "sl" | "et" | "lv" | "lt" | "fi" | "sv" | "no" | "da";
 
-// Base request interface - most API calls extend this
+/** Base fields shared by most ORS request bodies. */
 export interface BaseRequest {
-   id?: string; // Optional request identifier
+   /** Optional identifier for correlating requests/responses. Passed through as-is. */
+   id?: string;
 }
 
-// GeoJSON geometry object - the standard way to represent geographic shapes
+/** Standard GeoJSON geometry object. */
 export interface GeoJSONGeometry {
    type: "Point" | "LineString" | "Polygon" | "MultiPoint" | "MultiLineString" | "MultiPolygon";
    coordinates: number[] | number[][] | number[][][];
 }
 
-// GeoJSON feature object - a geographic feature with properties
+/** Standard GeoJSON Feature - a geometry plus arbitrary properties. */
 export interface GeoJSONFeature {
    type: "Feature";
    geometry: GeoJSONGeometry;
    properties: Record<string, unknown>;
 }
 
-// GeoJSON feature collection - a collection of geographic features
+/** Standard GeoJSON FeatureCollection - a list of features. */
 export interface GeoJSONFeatureCollection {
    type: "FeatureCollection";
    features: GeoJSONFeature[];
 }
 
-// Bounding box coordinates [west, south, east, north] - the extent of your area
+/** Bounding box as `[west, south, east, north]` - the geographic extent of an area. */
 export type BoundingBox = [number, number, number, number];
 
-// Context passed to buildKey — full request details so you can craft any key you want
+/**
+ * Full request context passed to a `buildKey` function.
+ * Contains everything needed to build a unique cache key for any request.
+ */
 export interface CacheKeyContext {
+   /** HTTP method of the request. */
    method: 'GET' | 'POST';
+   /** Endpoint path, e.g. `/directions/driving-car`. */
    endpoint: string;
+   /** Query parameters for GET requests. */
    params?: Record<string, unknown>;
+   /** Request body for POST requests. */
    body?: unknown;
 }
 
-// Implement this to plug in any storage backend (Redis, DB, Map, whatever)
+/**
+ * Plug in any cache storage backend - Redis, a DB, a plain Map, whatever.
+ * Both sync and async implementations are supported.
+ */
 export interface CacheAdapter {
+   /**
+    * Retrieve a cached value by key.
+    * @returns The cached value, or `null`/`undefined` on miss
+    */
    get(key: string): unknown | Promise<unknown>;
+   /**
+    * Store a value under a key with a TTL.
+    * @param ttl - Time-to-live in milliseconds
+    */
    set(key: string, value: unknown, ttl: number): void | Promise<void>;
 }
 
-// Full cache config when you need control over adapter, TTL, or key generation
+/** Full cache configuration when you need control over adapter, TTL, or key generation. */
 export interface CacheConfig {
+   /** The cache storage backend to use. */
    adapter: CacheAdapter;
-   ttl?: number; // ms — default 60_000
+   /** Cache TTL in milliseconds. Defaults to 60000 (60s). */
+   ttl?: number;
+   /** Custom key builder. Defaults to `defaultBuildKey` if not provided. */
    buildKey?: (ctx: CacheKeyContext) => string;
 }

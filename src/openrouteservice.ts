@@ -46,6 +46,10 @@ export class OpenRouteService {
    /** Export routing graph data from specific areas */
    public readonly export: ExportService;
 
+   /**
+    * @param config - Client configuration (API key, optional base URL, timeout, cache, etc.)
+    * @throws {OpenRouteServiceError} If no API key is provided when using the public API
+    */
    constructor(config: ClientConfig) {
       // Each service handles its own API version internally, so no worries about version conflicts
       this.directions = new DirectionsService(config);
@@ -60,14 +64,20 @@ export class OpenRouteService {
    }
 
    /**
-    * Quick health check to see if the API is working
+    * Quick health check to see if the API is up and responding.
+    *
+    * @returns Object with a `status` field, typically `"ready"` when all good
+    * @throws {OpenRouteServiceError} On network failure or if the API is down
     */
    async healthCheck(): Promise<{ status: string }> {
       return this.directions.health();
    }
 
    /**
-    * Get rate limit info from the most recent request made by any service
+    * Returns rate limit info from whichever service made the most recent request.
+    * Useful for monitoring your API quota across all services in one place.
+    *
+    * @returns Most recent rate limit info, or null if no requests have been made yet
     */
    getLastRateLimitInfo() {
       const services = [this.directions, this.matrix, this.isochrones, this.geocoding, this.pois, this.optimization, this.elevation, this.snap, this.export];

@@ -12,6 +12,10 @@ import type { ExportRequest, ExportResponse, ExportTopoJSONResponse } from "../t
 
 const API_VERSION = 2;
 
+/**
+ * Service for extracting raw routing graph data within a bounding box.
+ * Nodes are intersections, edges are road segments with their weights.
+ */
 export class ExportService extends OpenRouteServiceClient {
    constructor(config: ClientConfig) {
       super(config, API_VERSION);
@@ -23,9 +27,10 @@ export class ExportService extends OpenRouteServiceClient {
     * Gets you the raw network data - all the nodes and edges with their weights.
     * This is the stuff routing algorithms actually use under the hood.
     *
-    * @param profile - The routing profile to use (driving-car, foot-walking, etc.)
+    * @param profile - Routing profile to export the graph for, e.g. `"driving-car"`
     * @param request - Export request with bounding box and options
     * @returns Graph data with nodes and edges
+    * @throws {OpenRouteServiceError} On invalid bounding box or API errors
     *
     * @example
     * ```typescript
@@ -42,20 +47,26 @@ export class ExportService extends OpenRouteServiceClient {
    }
 
    /**
-    * Export routing graph data as JSON (explicit format)
+    * Export routing graph data as JSON (explicit format).
+    * Same as `exportGraph` but hits the `/json` endpoint directly.
     *
-    * Same as exportGraph but explicitly asks for JSON format. Sometimes the API
-    * gets confused about what format you want, so this is more explicit.
+    * @param profile - Routing profile to export the graph for
+    * @param request - Bounding box and options
+    * @returns Graph data with nodes and edges
+    * @throws {OpenRouteServiceError} On invalid bounding box or API errors
     */
    async exportGraphJSON(profile: Profile, request: ExportRequest): Promise<ExportResponse> {
       return this.post(`/export/${profile}/json`, request);
    }
 
    /**
-    * Export routing graph data as TopoJSON
+    * Export routing graph data as TopoJSON - more compact than GeoJSON and works great
+    * with web mapping libraries that support the format.
     *
-    * Gets the same data but in TopoJSON format - great for web mapping libraries
-    * that understand this format. More compact than regular GeoJSON too.
+    * @param profile - Routing profile to export the graph for
+    * @param request - Bounding box and options
+    * @returns Road network topology in TopoJSON format
+    * @throws {OpenRouteServiceError} On invalid bounding box or API errors
     */
    async exportGraphTopoJSON(profile: Profile, request: ExportRequest): Promise<ExportTopoJSONResponse> {
       const headers = { Accept: "application/json" };

@@ -17,10 +17,12 @@ export class DirectionsService extends OpenRouteServiceClient {
    }
 
    /**
-    * Simple route calculation using GET request - good for basic routes without fancy options
+    * Simple route calculation using GET request - good for basic A-to-B routes without extra options.
     *
-    * @param profile - How you're traveling (car, bike, walking, etc.)
+    * @param profile - Routing profile, e.g. `"driving-car"` or `"foot-walking"`
     * @param request - Start and end coordinates
+    * @returns Route as a GeoJSON FeatureCollection
+    * @throws {OpenRouteServiceError} On invalid coordinates, unsupported profile, or API errors
     *
     * @example
     * ```typescript
@@ -36,23 +38,23 @@ export class DirectionsService extends OpenRouteServiceClient {
    }
 
    /**
-    * Advanced route calculation with all the bells and whistles
+    * Full-featured route calculation with turn-by-turn instructions, alternatives, avoidance, and more.
     *
-    * Use this when you need turn-by-turn instructions, alternative routes,
-    * or want to avoid highways/tolls. This is the full-featured version.
+    * Use this when you need more than just geometry - instructions, alternative routes,
+    * waypoints, custom avoidances, elevation, extra info, etc.
     *
-    * @param profile - How you're traveling (car, bike, walking, etc.)
-    * @param request - All your routing preferences and options
+    * @param profile - Routing profile, e.g. `"driving-car"` or `"foot-walking"`
+    * @param request - Route request options including coordinates and preferences
+    * @returns Parsed route response with geometry, steps, summary, and any requested extras
+    * @throws {OpenRouteServiceError} On invalid coordinates, unsupported profile, or API errors
     *
     * @example
     * ```typescript
     * const route = await client.directions.calculateRoute('driving-car', {
     *   coordinates: [[8.681495, 49.41461], [8.686507, 49.41943]],
-    *   instructions: true,      // get turn-by-turn directions
-    *   language: 'en',         // in English please
-    *   options: {
-    *     avoid_features: ['highways', 'tollways']  // avoid highways and tolls
-    *   }
+    *   instructions: true,
+    *   language: 'en',
+    *   options: { avoid_features: ['highways', 'tollways'] }
     * });
     * ```
     */
@@ -61,7 +63,12 @@ export class DirectionsService extends OpenRouteServiceClient {
    }
 
    /**
-    * Same as calculateRoute but returns GeoJSON format - perfect for displaying on maps
+    * Same as `calculateRoute` but returns GeoJSON format - perfect for displaying on maps.
+    *
+    * @param profile - Routing profile, e.g. `"driving-car"` or `"foot-walking"`
+    * @param request - Route request options including coordinates and preferences
+    * @returns Route as a GeoJSON FeatureCollection with metadata
+    * @throws {OpenRouteServiceError} On invalid coordinates, unsupported profile, or API errors
     */
    async calculateRouteGeoJSON(profile: Profile, request: DirectionsPostRequest): Promise<DirectionsGeoJSONResponse> {
       const headers = { Accept: "application/geo+json" }; // GeoJSON endpoint requires specific Accept header
@@ -69,7 +76,12 @@ export class DirectionsService extends OpenRouteServiceClient {
    }
 
    /**
-    * Simple route in GeoJSON format - basically getRoute but returns GeoJSON
+    * Simple A-to-B route as GeoJSON - same as `getRoute` but returns GeoJSON format.
+    *
+    * @param profile - Routing profile, e.g. `"driving-car"` or `"foot-walking"`
+    * @param request - Start and end coordinates
+    * @returns Route as a GeoJSON FeatureCollection
+    * @throws {OpenRouteServiceError} On invalid coordinates, unsupported profile, or API errors
     */
    async getRouteGeoJSON(profile: Profile, request: DirectionsGetRequest): Promise<DirectionsGeoJSONResponse> {
       const params = { start: request.start.join(","), end: request.end.join(",") };

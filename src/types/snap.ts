@@ -2,22 +2,31 @@
 
 import type { Coordinate, Profile, BaseRequest, GeoJSONFeatureCollection } from "./common.js";
 
-// Snap request parameters - find the closest road to your coordinates
+/** Request to snap one or more coordinates to the nearest road in the routing graph. */
 export interface SnapRequest extends BaseRequest {
-   locations: Coordinate[]; // Array of coordinate pairs to snap to the routing graph
-   radius: number; // Search radius in meters for snapping
+   /** Coordinates to snap as `[longitude, latitude]` pairs. */
+   locations: Coordinate[];
+   /** Search radius in meters - only roads within this distance will be considered. */
+   radius: number;
 }
 
-// Snapped location result - where your point ended up on the road network
+/** Result for a single snapped location. */
 export interface SnappedLocation {
-   location: Coordinate; // Snapped coordinates [longitude, latitude]
-   name?: string; // Name of the snapped road/way
-   snapped_distance: number; // Distance from original point to snapped location in meters
+   /** The snapped coordinates on the road network as `[longitude, latitude]`. */
+   location: Coordinate;
+   /** Name of the road or way the point was snapped to, if available. */
+   name?: string;
+   /** Distance from the original input point to the snapped location in meters. */
+   snapped_distance: number;
 }
 
-// Snap response (JSON format) - your snapped locations
+/** Snap API response in JSON format. */
 export interface SnapResponse {
-   locations: (SnappedLocation | null)[]; // Array of snapped locations (null for locations that couldn't be snapped)
+   /**
+    * Snapped locations in the same order as the input.
+    * `null` for any point that couldn't be snapped within the given radius.
+    */
+   locations: (SnappedLocation | null)[];
 
    // Response metadata
    metadata: {
@@ -29,21 +38,26 @@ export interface SnapResponse {
    };
 }
 
-// Snap feature for GeoJSON response
+/** A single snapped point as a GeoJSON feature. */
 export interface SnapFeature {
    type: "Feature";
    geometry: { type: "Point"; coordinates: Coordinate };
    properties: {
-      source_id: number; // Source index from the input locations array
-      name?: string; // Name of the snapped road/way
-      snapped_distance: number; // Distance from original point to snapped location in meters
+      /** Index of this point in the original input `locations` array. */
+      source_id: number;
+      /** Name of the road or way the point was snapped to. */
+      name?: string;
+      /** Distance from the original point to the snapped location in meters. */
+      snapped_distance: number;
    };
 }
 
-// Snap response in GeoJSON format - ready for mapping
+/** Snap API response in GeoJSON format - ready for display on a map. */
 export interface SnapGeoJSONResponse extends GeoJSONFeatureCollection {
-   features: SnapFeature[]; // Snapped locations as GeoJSON features
-   bbox: [number, number, number, number]; // Bounding box [west, south, east, north]
+   /** Snapped locations as GeoJSON point features. */
+   features: SnapFeature[];
+   /** Bounding box enclosing all snapped points as `[west, south, east, north]`. */
+   bbox: [number, number, number, number];
 
    // Response metadata
    metadata: {

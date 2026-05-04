@@ -2,52 +2,65 @@
 
 import type { Coordinate, GeoJSONFeatureCollection } from "./common.js";
 
-// Elevation point request - get elevation for a single point
+/** Request to get elevation for a single coordinate point. */
 export interface ElevationPointRequest {
-   format_in: "geojson" | "point"; // Input format
-   format_out: "geojson" | "point"; // Output format
-   geometry: { type: "Point"; coordinates: Coordinate }; // Point geometry
+   /** Format of the input geometry: GeoJSON object or a bare point coordinate. */
+   format_in: "geojson" | "point";
+   /** Desired output format. */
+   format_out: "geojson" | "point";
+   /** Point to get elevation for. */
+   geometry: { type: "Point"; coordinates: Coordinate };
 }
 
-// Elevation line request - get elevation profile along a route
+/** Request to get elevation profile along a path. */
 export interface ElevationLineRequest {
-   format_in: "geojson" | "polyline" | "encodedpolyline"; // Input format
-   format_out: "geojson" | "polyline" | "encodedpolyline"; // Output format
-   geometry: { type: "LineString"; coordinates: Coordinate[] }; // Line geometry
-   range?: [number, number]; // Range for line interpolation
+   /** Format of the input geometry. */
+   format_in: "geojson" | "polyline" | "encodedpolyline";
+   /** Desired output format. */
+   format_out: "geojson" | "polyline" | "encodedpolyline";
+   /** Line to get elevation profile for. */
+   geometry: { type: "LineString"; coordinates: Coordinate[] };
+   /** Optional interpolation range. */
+   range?: [number, number];
 }
 
-// Elevation point response (GeoJSON format)
+/** Elevation response for a single point (non-GeoJSON format). */
 export interface ElevationPointResponse {
    attribution: string;
    timestamp: number;
    version: string;
-   geometry: { type: "Point"; coordinates: [number, number, number] }; // [lon, lat, elevation]
+   /** Point geometry with elevation as the third coordinate: `[lon, lat, elevation_m]`. */
+   geometry: { type: "Point"; coordinates: [number, number, number] };
 }
 
-// Elevation line response (GeoJSON format)
+/** Elevation response for a line (non-GeoJSON format). */
 export interface ElevationLineResponse {
    attribution: string;
    timestamp: number;
    version: string;
-   geometry: { type: "LineString"; coordinates: Array<[number, number, number]> }; // Array of [lon, lat, elevation]
+   /** Line geometry with elevation added as the third coordinate: `[lon, lat, elevation_m][]`. */
+   geometry: { type: "LineString"; coordinates: Array<[number, number, number]> };
 }
 
-// Elevation GeoJSON feature properties
+/** Properties on an elevation GeoJSON feature. */
 export interface ElevationProperties {
+   /** Elevation in meters above sea level. */
    elevation: number;
+   /** Distance along the line in meters (only present in line elevation responses). */
    distance?: number;
    [key: string]: unknown;
 }
 
-// Elevation GeoJSON feature
+/** A single elevation point as a GeoJSON feature. */
 export interface ElevationFeature {
    type: "Feature";
-   geometry: { type: "Point"; coordinates: [number, number, number] }; // [lon, lat, elevation]
+   /** Point geometry with elevation as third coordinate: `[lon, lat, elevation_m]`. */
+   geometry: { type: "Point"; coordinates: [number, number, number] };
    properties: ElevationProperties;
 }
 
-// Elevation GeoJSON response - collection of elevation points
+/** Elevation response in GeoJSON FeatureCollection format. */
 export interface ElevationGeoJSONResponse extends GeoJSONFeatureCollection {
-   features: ElevationFeature[]; // Elevation features
+   /** Elevation point features. */
+   features: ElevationFeature[];
 }

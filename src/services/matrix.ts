@@ -22,8 +22,10 @@ export class MatrixService extends OpenRouteServiceClient {
     * You give it a bunch of coordinates and it tells you how far/long it takes
     * to get from each point to every other point. Perfect for logistics and routing.
     *
-    * @param profile - How you're traveling (car, bike, walking, etc.)
-    * @param request - Your locations and what you want to calculate
+    * @param profile - Routing profile, e.g. `"driving-car"` or `"foot-walking"`
+    * @param request - Locations and which metrics to calculate (`duration`, `distance`, or both)
+    * @returns Matrix with optional `durations` and/or `distances` 2D arrays plus metadata
+    * @throws {OpenRouteServiceError} On invalid coordinates, too many locations, or API errors
     *
     * @example
     * ```typescript

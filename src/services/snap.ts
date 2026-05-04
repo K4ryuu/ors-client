@@ -17,29 +17,42 @@ export class SnapService extends OpenRouteServiceClient {
    }
 
    /**
-    * Snap coordinates to the nearest roads - returns JSON format
+    * Snap coordinates to the nearest roads - returns JSON format.
     *
-    * Takes your slightly-off coordinates and moves them to the nearest actual road.
-    * Perfect for cleaning up GPS tracks or ensuring coordinates are routable.
+    * @param profile - Routing profile to use for snapping, e.g. `"driving-car"`
+    * @param request - Coordinates to snap and the search radius in meters
+    * @returns Array of snapped locations (null for any that couldn't be snapped within the radius)
+    * @throws {OpenRouteServiceError} On invalid coordinates, unsupported profile, or API errors
+    *
+    * @example
+    * const snapped = await ors.snap.snapLocations("driving-car", {
+    *   locations: [[8.681495, 49.41461]],
+    *   radius: 350,
+    * });
     */
    async snapLocations(profile: Profile, request: SnapRequest): Promise<SnapResponse> {
       return this.post<SnapResponse>(`/snap/${profile}`, request);
    }
 
    /**
-    * Same as snapLocations but explicitly asks for JSON format
+    * Same as `snapLocations` but hits the `/json` endpoint explicitly.
     *
-    * Sometimes the API gets confused about formats, so this is more explicit.
+    * @param profile - Routing profile to use for snapping
+    * @param request - Coordinates to snap and the search radius in meters
+    * @returns Array of snapped locations
+    * @throws {OpenRouteServiceError} On invalid coordinates, unsupported profile, or API errors
     */
    async snapLocationsJSON(profile: Profile, request: SnapRequest): Promise<SnapResponse> {
       return this.post<SnapResponse>(`/snap/${profile}/json`, request);
    }
 
    /**
-    * Snap coordinates and return as GeoJSON - great for mapping
+    * Snap coordinates and return as GeoJSON - perfect for displaying snapped points on a map.
     *
-    * Same snapping but returns GeoJSON format, perfect if you want to display
-    * the results on a map or use with mapping libraries.
+    * @param profile - Routing profile to use for snapping
+    * @param request - Coordinates to snap and the search radius in meters
+    * @returns Snapped locations as a GeoJSON FeatureCollection
+    * @throws {OpenRouteServiceError} On invalid coordinates, unsupported profile, or API errors
     */
    async snapLocationsGeoJSON(profile: Profile, request: SnapRequest): Promise<SnapGeoJSONResponse> {
       return this.post<SnapGeoJSONResponse>(`/snap/${profile}/geojson`, request);
