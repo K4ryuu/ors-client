@@ -9,11 +9,6 @@ export default defineConfig({
   minify: true,
   treeshake: true,
   splitting: false,
+  platform: 'neutral',
   target: 'es2022',
-  outDir: 'dist',
-  external: [],
-  noExternal: [],
-  banner: {
-    js: '/* OpenRouteService TypeScript Client */'
-  }
 });

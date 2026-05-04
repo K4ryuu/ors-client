@@ -178,7 +178,7 @@ export class OpenRouteServiceClient {
             throw new OpenRouteServiceError(errorMessage, response.status, responseData, rateLimitInfo);
          }
 
-         return await response.json();
+         return (await response.json()) as T;
       } catch (error) {
          clearTimeout(timeoutId);
 

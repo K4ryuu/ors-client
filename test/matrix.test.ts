@@ -1,6 +1,4 @@
-import "dotenv/config";
-import { test, describe } from "node:test";
-import { strict as assert } from "node:assert";
+import { test, describe, expect } from "bun:test";
 import { OpenRouteService } from "../src/index.js";
 
 const API_KEY = process.env.ORS_API_KEY || "";
@@ -18,10 +16,10 @@ describe("Matrix Service", () => {
          metrics: ["distance"],
       });
 
-      assert.ok(response.distances);
-      assert.equal(response.distances.length, 3);
-      assert.equal(response.distances[0]?.length, 3);
-      assert.equal(response.distances[0]?.[0], 0); // Distance from point to itself
+      expect(response.distances).toBeTruthy();
+      expect(response.distances!.length).toBe(3);
+      expect(response.distances![0]?.length).toBe(3);
+      expect(response.distances![0]?.[0]).toBe(0);
    });
 
    test("should calculate duration matrix", async () => {
@@ -33,10 +31,10 @@ describe("Matrix Service", () => {
          metrics: ["duration"],
       });
 
-      assert.ok(response.durations);
-      assert.equal(response.durations.length, 2);
-      assert.equal(response.durations[0]?.length, 2);
-      assert.equal(response.durations[0]?.[0], 0); // Duration from point to itself
+      expect(response.durations).toBeTruthy();
+      expect(response.durations!.length).toBe(2);
+      expect(response.durations![0]?.length).toBe(2);
+      expect(response.durations![0]?.[0]).toBe(0);
    });
 
    test("should calculate matrix with both metrics", async () => {
@@ -48,14 +46,10 @@ describe("Matrix Service", () => {
          metrics: ["duration", "distance"],
       });
 
-      assert.ok(response.durations);
-      assert.ok(response.distances);
-      if (response.durations) {
-         assert.equal(response.durations.length, 2);
-      }
-      if (response.distances) {
-         assert.equal(response.distances.length, 2);
-      }
+      expect(response.durations).toBeTruthy();
+      expect(response.distances).toBeTruthy();
+      if (response.durations) expect(response.durations.length).toBe(2);
+      if (response.distances) expect(response.distances.length).toBe(2);
    });
 
    test("should calculate matrix with sources and destinations", async () => {
@@ -71,9 +65,9 @@ describe("Matrix Service", () => {
          metrics: ["duration"],
       });
 
-      assert.ok(response.durations);
-      assert.equal(response.durations.length, 2); // 2 sources
-      assert.equal(response.durations[0]?.length, 2); // 2 destinations
+      expect(response.durations).toBeTruthy();
+      expect(response.durations!.length).toBe(2);
+      expect(response.durations![0]?.length).toBe(2);
    });
 
    test("should resolve locations when requested", async () => {
@@ -86,10 +80,10 @@ describe("Matrix Service", () => {
          resolve_locations: true,
       });
 
-      assert.ok(response.durations);
-      assert.ok(response.sources);
-      assert.ok(response.destinations);
-      assert.equal(response.sources.length, 2);
-      assert.equal(response.destinations.length, 2);
+      expect(response.durations).toBeTruthy();
+      expect(response.sources).toBeTruthy();
+      expect(response.destinations).toBeTruthy();
+      expect(response.sources!.length).toBe(2);
+      expect(response.destinations!.length).toBe(2);
    });
 });
