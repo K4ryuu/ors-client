@@ -1,5 +1,6 @@
 export { OpenRouteService } from './openrouteservice.js';
 export { OpenRouteServiceClient, OpenRouteServiceError } from './client.js';
+export { MemoryCache, defaultBuildKey } from './cache.js';
 
 export { DirectionsService } from './services/directions.js';
 export { MatrixService } from './services/matrix.js';
@@ -22,7 +23,12 @@ export type {
 	BaseRequest,
 	DistanceUnit,
 	LanguageCode,
-	GeoJSONFeatureCollection
+	GeoJSONGeometry,
+	GeoJSONFeature,
+	GeoJSONFeatureCollection,
+	BoundingBox,
+	ApiError,
+	ResponseFormat
 } from './types/common.js';
 
 export type {
