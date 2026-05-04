@@ -1,8 +1,14 @@
-import type { ClientConfig } from "./types/common.js";
+import type { CacheAdapter, CacheKeyContext, ClientConfig } from "./types/common.js";
+import { MemoryCache, defaultBuildKey } from "./cache.js";
 
 // Custom error class so you can catch ORS-specific errors easily
 export class OpenRouteServiceError extends Error {
-   constructor(message: string, public statusCode?: number, public response?: unknown, public rateLimitInfo?: { limit: number; remaining: number; reset: number }) {
+   constructor(
+      message: string,
+      public statusCode?: number,
+      public response?: unknown,
+      public rateLimitInfo?: { limit: number; remaining: number; reset: number },
+   ) {
       super(message);
       this.name = "OpenRouteServiceError";
    }
@@ -11,24 +17,31 @@ export class OpenRouteServiceError extends Error {
    isBadRequest(): boolean {
       return this.statusCode === 400;
    }
+
    isNotFound(): boolean {
       return this.statusCode === 404;
    }
+
    isMethodNotAllowed(): boolean {
       return this.statusCode === 405;
    }
+
    isPayloadTooLarge(): boolean {
       return this.statusCode === 413;
    }
+
    isRateLimited(): boolean {
       return this.statusCode === 429;
    }
+
    isServerError(): boolean {
       return this.statusCode === 500;
    }
+
    isNotImplemented(): boolean {
       return this.statusCode === 501;
    }
+
    isServiceUnavailable(): boolean {
       return this.statusCode === 503;
    }
@@ -36,6 +49,7 @@ export class OpenRouteServiceError extends Error {
    getRateLimitInfo() {
       return this.rateLimitInfo;
    }
+
    getRemainingRequests(): number {
       return this.rateLimitInfo?.remaining || 0;
    }
@@ -47,6 +61,7 @@ export class OpenRouteServiceClient {
    private readonly baseHeaders: Record<string, string>;
    protected readonly baseUrl: string;
    private lastRateLimitInfo?: { limit: number; remaining: number; reset: Date; requestTimestamp: Date };
+   private readonly cacheConfig?: { adapter: CacheAdapter; ttl: number; buildKey: (ctx: CacheKeyContext) => string };
 
    // Throttling for individual geocoding endpoints (each endpoint gets its own throttle per API key)
    // Structure: Map<apiKey, Map<endpoint, timestamp>>
@@ -84,6 +99,14 @@ export class OpenRouteServiceClient {
          ...(this.config.apiKey ? { Authorization: this.config.apiKey } : {}),
          ...this.config.headers,
       };
+
+      if (config.cache !== undefined) {
+         if (typeof config.cache === "number") {
+            this.cacheConfig = { adapter: new MemoryCache(), ttl: config.cache, buildKey: defaultBuildKey };
+         } else {
+            this.cacheConfig = { adapter: config.cache.adapter, ttl: config.cache.ttl ?? 60_000, buildKey: config.cache.buildKey ?? defaultBuildKey };
+         }
+      }
    }
 
    private getErrorMessage(statusCode: number): string {
@@ -125,6 +148,17 @@ export class OpenRouteServiceClient {
          });
          const queryString = searchParams.toString();
          if (queryString) url += `?${queryString}`;
+      }
+
+      const cacheKey = this.cacheConfig ? this.cacheConfig.buildKey({ method, endpoint, ...(params !== undefined ? { params } : {}), ...(body !== undefined ? { body } : {}) }) : null;
+
+      if (this.cacheConfig && cacheKey) {
+         try {
+            const cached = await this.cacheConfig.adapter.get(cacheKey);
+            if (cached !== null && cached !== undefined) return cached as T;
+         } catch {
+            // cache read error — fall through to fetch
+         }
       }
 
       const controller = new AbortController();
@@ -178,7 +212,17 @@ export class OpenRouteServiceClient {
             throw new OpenRouteServiceError(errorMessage, response.status, responseData, rateLimitInfo);
          }
 
-         return (await response.json()) as T;
+         const data = (await response.json()) as T;
+
+         if (this.cacheConfig && cacheKey) {
+            try {
+               await this.cacheConfig.adapter.set(cacheKey, data, this.cacheConfig.ttl);
+            } catch {
+               // cache write error — ignore, request already succeeded
+            }
+         }
+
+         return data;
       } catch (error) {
          clearTimeout(timeoutId);
 
@@ -228,7 +272,7 @@ export class OpenRouteServiceClient {
 
       if (timeSinceLastRequest < OpenRouteServiceClient.GEOCODING_THROTTLE_MS) {
          const delayNeeded = OpenRouteServiceClient.GEOCODING_THROTTLE_MS - timeSinceLastRequest;
-         await new Promise(resolve => setTimeout(resolve, delayNeeded));
+         await new Promise((resolve) => setTimeout(resolve, delayNeeded));
       }
 
       endpointMap.set(endpoint, Date.now());

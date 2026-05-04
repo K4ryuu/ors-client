@@ -24,6 +24,7 @@ export interface ClientConfig {
    baseUrl?: string; // API base URL (leave default unless self-hosting)
    timeout?: number; // Request timeout in milliseconds (default: 30000)
    headers?: Record<string, string>; // Extra headers to send with requests
+   cache?: number | CacheConfig; // number = TTL ms for built-in in-memory cache; CacheConfig for custom adapter
 }
 
 // Standard API error response from ORS
@@ -69,3 +70,24 @@ export interface GeoJSONFeatureCollection {
 
 // Bounding box coordinates [west, south, east, north] - the extent of your area
 export type BoundingBox = [number, number, number, number];
+
+// Context passed to buildKey — full request details so you can craft any key you want
+export interface CacheKeyContext {
+   method: 'GET' | 'POST';
+   endpoint: string;
+   params?: Record<string, unknown>;
+   body?: unknown;
+}
+
+// Implement this to plug in any storage backend (Redis, DB, Map, whatever)
+export interface CacheAdapter {
+   get(key: string): unknown | Promise<unknown>;
+   set(key: string, value: unknown, ttl: number): void | Promise<void>;
+}
+
+// Full cache config when you need control over adapter, TTL, or key generation
+export interface CacheConfig {
+   adapter: CacheAdapter;
+   ttl?: number; // ms — default 60_000
+   buildKey?: (ctx: CacheKeyContext) => string;
+}
