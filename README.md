@@ -129,18 +129,16 @@ If you want to contribute or just poke around:
 git clone https://github.com/K4ryuu/ors-client.git
 cd ors-client
 
-# Install deps (pick your poison)
-pnpm install
-# bun install
+# Install deps
+bun install
 
 # Run tests (you'll need a .env file with your API key)
 cp .env.example .env
 # add your key to .env
-pnpm test
-# bun test
+bun test
 
 # Build it
-pnpm run build
+bun run build
 ```
 
 ### A note about tests
