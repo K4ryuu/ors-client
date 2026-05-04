@@ -1,6 +1,7 @@
 // Types for the Isochrones service - draw areas you can reach within time/distance limits
 
 import type { Coordinate, BaseRequest, GeoJSONFeatureCollection } from "./common.js";
+import type { RoutingOptions } from "./directions.js";
 
 /**
  * How range values are interpreted.
@@ -31,6 +32,13 @@ export interface IsochroneRequest extends BaseRequest {
    units?: "m" | "km" | "mi";
    /** Unit for area values in the response properties. */
    area_units?: "m" | "km" | "ha" | "mi" | "ft";
+   /** Routing avoidance and vehicle restriction options - same as the directions endpoint. */
+   options?: RoutingOptions;
+   /**
+    * Departure time as an ISO 8601 datetime string.
+    * Affects time-based reachability when using time-dependent routing profiles.
+    */
+   time?: string;
 }
 
 /** Isochrone API response - a GeoJSON FeatureCollection of reachable area polygons. */

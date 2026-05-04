@@ -134,6 +134,24 @@ export interface DirectionsPostRequest extends BaseRequest {
    skip_segments?: number[];
    /** Suppress API warning messages in the response. */
    suppress_warnings?: boolean;
+   /**
+    * Bearing constraints per waypoint as `[value, range]` pairs.
+    * `value` is the desired bearing in degrees (0-360), `range` is the allowed deviation (0-180).
+    * Pass `null` for waypoints with no bearing constraint.
+    */
+   bearings?: Array<[number, number] | null>;
+   /** Use contraction hierarchies for faster routing - slightly less optimal but much quicker. */
+   optimized?: boolean;
+   /**
+    * Requested departure time as an ISO 8601 datetime string.
+    * Only used with public transport profiles.
+    */
+   departure?: string;
+   /**
+    * Requested arrival time as an ISO 8601 datetime string.
+    * Only used with public transport profiles.
+    */
+   arrival?: string;
    /** Distance unit for the response. */
    units?: DistanceUnit;
    /** Include route geometry in the response. */
