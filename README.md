@@ -20,7 +20,7 @@
   <p align="center">
     A modern, lightweight client library for the OpenRouteService API
     <br />
-    <strong>Zero runtime dependencies • Full TypeScript support • Built-in rate limiting</strong>
+    <strong>Zero runtime dependencies • Full TypeScript support • Built-in rate limiting • Pluggable caching</strong>
     <br />
     <br />
     <a href="#installation"><strong>Get Started »</strong></a>
@@ -52,6 +52,7 @@ What makes this client special:
 -  **Full TypeScript support** - Complete type safety (no more `any` everywhere!)
 -  **All ORS services** - Everything from routing to geocoding in one package
 -  **Built-in throttling** - Automatic rate limiting compliance
+-  **Pluggable caching** - Built-in in-memory cache or bring your own (Redis, DB, anything)
 -  **Actually useful error messages** - Know exactly what went wrong
 
 ## What's inside?
@@ -71,8 +72,8 @@ This client covers all the main ORS services:
 
 ```bash
 npm install ors-client
-# or if you're using pnpm like me
 pnpm add ors-client
+bun add ors-client
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -128,13 +129,15 @@ If you want to contribute or just poke around:
 git clone https://github.com/K4ryuu/ors-client.git
 cd ors-client
 
-# Install deps
+# Install deps (pick your poison)
 pnpm install
+# bun install
 
 # Run tests (you'll need a .env file with your API key)
 cp .env.example .env
 # add your key to .env
 pnpm test
+# bun test
 
 # Build it
 pnpm run build
@@ -221,11 +224,49 @@ try {
 }
 ```
 
+## Caching
+
+Pass `cache` to the config and identical requests are served from cache — no extra network call.
+
+**In-memory (zero setup):**
+
+```typescript
+const ors = new OpenRouteService({
+   apiKey: "your-api-key",
+   cache: 6 * 60 * 60_000, // 6h TTL, built-in Map-based cache
+});
+```
+
+**Custom adapter (Redis, DB, anything):**
+
+```typescript
+import Redis from 'ioredis';
+const redis = new Redis();
+
+const ors = new OpenRouteService({
+   apiKey: "your-api-key",
+   cache: {
+      adapter: {
+         get: async (key) => {
+            const val = await redis.get(key);
+            return val ? JSON.parse(val) : null;
+         },
+         set: async (key, value, ttl) => {
+            await redis.set(key, JSON.stringify(value), 'PX', ttl);
+         },
+      },
+      ttl: 6 * 60 * 60_000, // 6h
+   },
+});
+```
+
+The `CacheAdapter` interface is dead simple — two methods, sync or async, any backend works. You can also pass a `buildKey` function to control exactly how cache keys are generated. Check out [examples/caching.ts](./examples/caching.ts) for more patterns.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## Important notes
 
 **Please consider supporting the OpenRouteService team!** If you can, definitely thank the OpenRouteService team for their work: https://openrouteservice.org/donations/
-
-**Cache your API responses!** If you can, definitely cache your API responses to take some load off their servers and help everyone else by keeping the service running smoothly.
 
 ## Found a bug?
 
